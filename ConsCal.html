@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+	<!-- WIP Styling
+	<header> ConsCal </header>
+	<p> This tool is described in the following paper</p>
+
+	<link href="conscal_css.css" rel="stylesheet" /> 
+	-->
+
+	<form> <!-- form to get the type of calculation needed -->
+		What type of calculation is required?
+		<input type="radio" name="calc_type" id="rec_risk" value="recurrence_risk"
+			onclick="ShowRecurrenceRisk()">Recurrence Risk
+		<input type="radio" name="calc_type" id="seg_power" value="segregation_power"
+			onclick="ShowSegregationPower()">Segregation Power
+	</form>
+	<form hidden id="reccurence_risk_form"> <!-- reccurence risk form -->
+		<br>
+		How many diseases are being investigated?<input type="number" id="n" value="1"
+			onkeydown="if(tempFunction(event)) {CalculateRecurrenceRisk(this.value)}"
+			onchange="CalculateRecurrenceRisk(this.value)" style="width:30px;">
+	</form>
+	<p id="rr_result">
+		<br>
+		<br>
+		<br>
+	</p>
+
+	<form hidden id="variant_name_form">
+
+	</form>
+
+	<p hidden id="variant_type_result"></p>
+
+	<form hidden id="create_punnettsquare_button_form"></form>
+
+	<form hidden id="calculate_severity_risk_button_form"></form>
+
+	<p id="punnett_square_result"></p>
+
+	<form hidden id="punnett_checkbox_form">
+
+	</form>
+
+	<form hidden id="extra_punnett_checkbox_options_form">
+
+	</form>
+
+	<p hidden id="extra_punnett_options_probability"></p>
+
+	<form hidden id="segregation_power_form">
+		<br>
+		Number of tested relatives <input type="number" id="total_number_of_relatives" size="2" value="1"
+			onchange="ShowSegPowerOptions(this.value)"
+			onkeydown="if(tempFunction(event)) {ShowSegPowerOptions(this.value)}" style="width:30px;">
+		<br>
+		<br>
+		<br>
+	</form>
+
+	<!-- segregation power form-->
+	<form id="segregation_power_options">
+	</form>
+	<p id="sp_result"></p>
+
+	<script>
+		function ReturnVarList(tot) {
+			punnettVariantList = [];
+			for (var i = 0; i < tot; i++) {
+				punnettVariantList[i] = document.getElementById("punnett_disease_" + i).value;
+				if (punnettVariantList[i] == "") {
+					alert("Do not leave any disease names blank");
+					break;
+				}
+			}
+			return punnettVariantList;
+		}
+
+		function ShowRecurrenceRisk() {
+			document.getElementById("reccurence_risk_form").hidden = false;
+			document.getElementById("rr_result").hidden = false;
+			document.getElementById("segregation_power_form").hidden = true;
+			document.getElementById("segregation_power_options").hidden = true;
+			document.getElementById("sp_result").hidden = true;
+			document.getElementById("variant_name_form").hidden = false;
+			document.getElementById("variant_type_result").hidden = false;
+			document.getElementById("create_punnettsquare_button_form").hidden = false;
+			document.getElementById("calculate_severity_risk_button_form").hidden = false;
+			document.getElementById("punnett_square_result").hidden = false;
+			document.getElementById("punnett_checkbox_form").hidden = false;
+			document.getElementById("extra_punnett_checkbox_options_form").hidden = false;
+			document.getElementById("extra_punnett_options_probability").hidden = false;
+		}
+		function ShowSegregationPower() {
+			document.getElementById("segregation_power_form").hidden = false;
+			document.getElementById("rr_result").hidden = true;
+			document.getElementById("reccurence_risk_form").hidden = true;
+			document.getElementById("segregation_power_options").hidden = false;
+			document.getElementById("sp_result").hidden = false;
+			document.getElementById("variant_name_form").hidden = true;
+			document.getElementById("variant_type_result").hidden = true;
+			document.getElementById("create_punnettsquare_button_form").hidden = true;
+			document.getElementById("calculate_severity_risk_button_form").hidden = true;
+			document.getElementById("punnett_square_result").hidden = true;
+			document.getElementById("punnett_checkbox_form").hidden = true;
+			document.getElementById("extra_punnett_checkbox_options_form").hidden = true;
+			document.getElementById("extra_punnett_options_probability").hidden = true;
+		}
+
+		function ShowSegPowerOptions(tot) {
+			document.getElementById("sp_result").innerText = "";
+			var form = document.getElementById("segregation_power_options");
+			if (tot <= 0) {
+				alert("Please insert a valid number");
+				return;
+			}
+			form.innerHTML = "";
+
+			var i = 1;
+			while (i <= tot) {
+				var temp_relation = document.createElement("select");
+				temp_relation.setAttribute("onchange", "document.getElementById('sp_result').innerText = ''");
+
+				var option_sibling = document.createElement("option");
+				option_sibling.value = 0.25;
+				option_sibling.innerText = "Full brother / Full sister";
+				var option_parent = document.createElement("option");
+				option_parent.value = 0.25;
+				option_parent.innerText = "Father / Mother";
+				var option_child = document.createElement("option");
+				option_child.value = 0.25;
+				option_child.innerText = "Son / Daughter";
+				var option_grandparent = document.createElement("option");
+				option_grandparent.value = 0.125;
+				option_grandparent.innerText = "Grandfather / Grandmother";
+				var option_grandchild = document.createElement("option");
+				option_grandchild.value = 0.125;
+				option_grandchild.innerText = "Grandson / Granddaughter";
+				var option_uncleaunt = document.createElement("option");
+				option_uncleaunt.value = 0.125;
+				option_uncleaunt.innerText = "Uncle / Aunt";
+				var option_nephewniece = document.createElement("option");
+				option_nephewniece.value = 0.125;
+				option_nephewniece.innerText = "Nephew / Niece";
+				var option_firstcousin = document.createElement("option");
+				option_firstcousin.value = 0.0625;
+				option_firstcousin.innerText = "First Cousin";
+				var option_halfsibling = document.createElement("option");
+				option_halfsibling.value = 0.125;
+				option_halfsibling.innerText = "Half brother / Half sister";
+				var option_firstcousinonceremoved = document.createElement("option");
+				option_firstcousinonceremoved.value = 0.03125;
+				option_firstcousinonceremoved.innerText = "First cousin once removed";
+				var option_doublefirstcousin = document.createElement("option");
+				option_doublefirstcousin.value = 0.125;
+				option_doublefirstcousin.innerText = "Double first cousin";
+
+
+				temp_relation.appendChild(option_sibling);
+				temp_relation.appendChild(option_parent);
+				temp_relation.appendChild(option_child);
+				temp_relation.appendChild(option_grandparent);
+				temp_relation.appendChild(option_grandchild);
+				temp_relation.appendChild(option_uncleaunt);
+				temp_relation.appendChild(option_nephewniece);
+				temp_relation.appendChild(option_halfsibling);
+				temp_relation.appendChild(option_firstcousin);
+				temp_relation.appendChild(option_firstcousinonceremoved);
+				temp_relation.appendChild(option_doublefirstcousin);
+				temp_relation.id = ("relation_" + i);
+
+				var aff = document.createElement("input");
+				aff.setAttribute("type", "radio");
+				aff.setAttribute("name", "aff_unaff_" + i);
+				aff.id = ("aff_" + i);
+				aff.setAttribute("value", 1);
+				aff.setAttribute("onclick", "document.getElementById('sp_result').innerText = ''");
+				var unaff = document.createElement("input");
+				unaff.setAttribute("type", "radio");
+				unaff.setAttribute("name", "aff_unaff_" + i);
+				unaff.id = ("unaff_" + i);
+				unaff.setAttribute("value", 0);
+				unaff.setAttribute("onclick", "document.getElementById('sp_result').innerText = ''");
+
+				form.appendChild(document.createTextNode("What is the relation between the proband and relative "));
+				form.append(i);
+				form.appendChild(document.createTextNode("? "));
+				form.appendChild(temp_relation);
+				form.appendChild(document.createElement("br"));
+
+				//form.append("Is relative " + i + " affected or unaffected by the variant?  " + temp_aff + "Affected " + unaff + "Unaffected <br>");
+				form.appendChild(document.createTextNode("Is relative "));
+				form.append(i);
+				form.appendChild(document.createTextNode(" affected or unaffected by the varient? "));
+				form.appendChild(aff);
+				form.appendChild(document.createTextNode("Affected "));
+				form.appendChild(unaff);
+				form.appendChild(document.createTextNode("Unaffected"));
+				form.appendChild(document.createElement("br"));
+				form.appendChild(document.createElement("br"));
+
+				i++;
+			}
+			seg_power_button = document.createElement("input");
+			seg_power_button.type = "button";
+			seg_power_button.setAttribute("onclick", "CalculateSegregationPower()");
+			seg_power_button.value = "Calculate Segregation Power";
+			form.appendChild(seg_power_button);
+		}
+		function ShowPunnettOptions(numOfVar) {
+			var punnettForm = document.getElementById("variant_name_form");
+			punnettForm.innerHTML = "";
+			document.getElementById("punnett_square_result").innerHTML = "";
+			document.getElementById("punnett_checkbox_form").innerHTML = "";
+			for (i = 0; i < numOfVar; i++) {
+				punnettForm.appendChild(document.createTextNode("What is the name of disease " + (i + 1) + "? "));
+				var tempDisease = document.createElement("input");
+				tempDisease.setAttribute("type", "text");
+				tempDisease.id = "punnett_disease_" + i;
+				punnettForm.appendChild(tempDisease);
+
+				// var tempDiseaseType = document.createElement("select");
+				// var diseaseoption_lethal = document.createElement("option");
+				// diseaseoption_lethal.value = "lethal";
+				// diseaseoption_lethal.innerText = "Lethal disease";
+				// var diseaseoption_medicallysignificant = document.createElement("option");
+				// diseaseoption_medicallysignificant.value = "medically_significant";
+				// diseaseoption_medicallysignificant.innerText = "Medically significant disease";
+				// var diseaseoption_adultonset = document.createElement("option");
+				// diseaseoption_adultonset.value = "adult_onset";
+				// diseaseoption_adultonset.innerText = "Adult onset disease";
+				// tempDiseaseType.appendChild(diseaseoption_lethal);
+				// tempDiseaseType.appendChild(diseaseoption_medicallysignificant);
+				// tempDiseaseType.appendChild(diseaseoption_adultonset);
+				// tempDiseaseType.id = "punnett_diseasetype_" + i;
+				// punnettForm.appendChild(tempDiseaseType);
+
+				punnettForm.appendChild(document.createElement("br"));
+			}
+			//CreateSeverityRiskButton();
+			CreatePunnettButton();
+		}
+		function ValidatePunnettForm(tot, actionNum) {
+			punnettVariantList = [];
+			//punnettVariantTypeList = [];
+			for (var i = 0; i < tot; i++) {
+				punnettVariantList[i] = document.getElementById("punnett_disease_" + i).value;
+				//punnettVariantTypeList[i] = document.getElementById("punnett_diseasetype_" + i).value;
+				if (punnettVariantList[i] == "") {
+					alert("Do not leave any disease names blank");
+					break;
+				}
+			}
+			if (actionNum == 1) {
+				document.getElementById("punnett_square_result").innerHTML = makeTableHTML(CreatePunnettSquare(punnettVariantList));
+				ShowPunnettCheckboxes(punnettVariantList);
+			}
+			else if (actionNum == 2) {
+				document.getElementById("variant_type_result").innerHTML = DisplaySeverityRecurrenceRisk(punnettVariantList, punnettVariantTypeList);
+			}
+		}
+		function CreatePunnettButton() {
+			var punnettButton = document.createElement("input");
+			punnettButton.setAttribute("type", "button");
+			punnettButton.setAttribute("value", "Generate Punnett Square");
+			punnettButton.setAttribute("onclick", "ValidatePunnettForm(document.getElementById('n').value * 1, 1)");
+			var punnettButtonForm = document.getElementById("create_punnettsquare_button_form");
+			punnettButtonForm.innerHTML = "";
+			punnettButtonForm.appendChild(punnettButton);
+		}
+		// function CreateSeverityRiskButton() {
+		// 	var severityRiskButton = document.createElement("input");
+		// 	severityRiskButton.setAttribute("type", "button");
+		// 	severityRiskButton.setAttribute("value", "Calculate Severity Recurrence Risk");
+		// 	severityRiskButton.setAttribute("onclick", "ValidatePunnettForm(document.getElementById('n').value * 1, 2)");
+		// 	var severityRiskButtonForm = document.getElementById("calculate_severity_risk_button_form");
+		// 	severityRiskButtonForm.innerHTML = "";
+		// 	severityRiskButtonForm.appendChild(severityRiskButton);
+		// }
+		// function DisplaySeverityRecurrenceRisk(variantList, variantTypeList) {
+		// 	var allCombinations = BinaryPermutations(variantList.length);
+		// 	var finalString = "";
+		// 	var numLethal = 0;
+		// 	var lethalIndex = [];
+		// 	var numAdultOnset = 0;
+		// 	var adultOnsetIndex = [];
+		// 	var numMedicallySignificant = 0;
+		// 	var medicallySignificatIndex = [];
+		// 	for (var i = 0; i < variantTypeList.length; i++) {	
+		// 		if (variantTypeList[i] == "lethal") {
+		// 			numLethal++;
+		// 			lethalIndex[i] = 1;
+		// 			continue;
+		// 		}
+		// 		else {
+		// 			lethalIndex[i] = 0;
+		// 		}
+		// 		if (variantTypeList[i] == "adult_onset") {
+		// 			numAdultOnset++;
+		// 			adultOnsetIndex[i] = 1;
+		// 			continue;
+		// 		}
+		// 		else {
+		// 			adultOnsetIndex[i] = 0;
+		// 		}
+		// 		if (variantTypeList[i] == "medically_significant") {
+		// 			numMedicallySignificant++;
+		// 			medicallySignificatIndex[i] = 1;
+		// 			continue;
+		// 		}
+		// 		else {
+		// 			medicallySignificatIndex[i] = 0;
+		// 		}
+		// 	}
+
+		// 	for (var i = 0; i < variantList.length; i++) {
+		// 		for (var leth = 0; leth < numLethal; leth++) {
+		// 			var lethResult = "The probability of being affected by " + (leth + 1) + " disease(s) is ";
+		// 			var lethCount = 0;
+		// 			for (var j = 0; j < allCombinations.length; j++) {
+		// 				var count = 0;
+		// 				for (var k = 0; k < allCombinations[j].length; k++) {
+		// 					if (allCombinations[j][k] == lethalIndex[k]) {
+		// 						count++;
+		// 					}
+		// 				}
+		// 				if (count == leth + 1) {
+		// 					lethCount++;
+		// 				}
+		// 			}
+		// 			lethResult += lethCount / allCombinations.length * 100 + "%";					
+		// 		}
+		// 		finalString += lethResult + "\n";
+		// 		for (var medSig = 0; medSig < numMedicallySignificant; medSig++) {
+		// 			var medSigResult = "The probability of being affected by " + (medSig + 1) + " disease(s) is ";
+		// 			var medSigCount = 0;
+		// 			for (var j = 0; j < allCombinations.length; j++) {
+		// 				var count = 0;
+		// 				for (var k = 0; k < allCombinations[j].length; k++) {
+		// 					if (allCombinations[j][k] == medicallySignificatIndex[k]) {
+		// 						count++;
+		// 					}
+		// 				}
+		// 				if (count == medSig + 1) {
+		// 					medSigCount++;
+		// 				}
+		// 			}
+		// 			medSigResult += medSigCount / allCombinations.length * 100 + "% \n \n";					
+		// 		}
+		// 		finalString += medSigResult + "\n";
+		// 		for (var adltOnset = 0; adltOnset < numAdultOnset; adltOnset++) {
+		// 			var adltOnsetResult = "The probability of being affected by " + (adltOnset + 1) + " disease(s) is ";
+		// 			var adltOnsetCount = 0;
+		// 			for (var j = 0; j < allCombinations.length; j++) {
+		// 				var count = 0;
+		// 				for (var k = 0; k < allCombinations[j].length; k++) {
+		// 					if (allCombinations[j][k] == adultOnsetIndex[k]) {
+		// 						count++;
+		// 					}
+		// 				}
+		// 				if (count == adltOnset + 1) {
+		// 					adltOnsetCount++;
+		// 				}
+		// 			}
+		// 			adltOnsetResult += adltOnsetCount / allCombinations.length * 100 + "%";					
+		// 		}
+		// 		finalString += adltOnsetResult + "\n";
+		// 	}
+		// 	return finalString;
+		// }
+		function ShowPunnettCheckboxes(variantList) {
+			document.getElementById('extra_punnett_checkbox_options_form').innerHTML = "";
+			var form = document.getElementById("punnett_checkbox_form");
+			form.innerText = "";
+			var punnettList = CreatePunnettSquare(variantList);
+
+			var healthyRadioButton = document.createElement("input");
+			healthyRadioButton.id = "radio_button_healthy";
+			healthyRadioButton.setAttribute("type", "radio");
+			healthyRadioButton.setAttribute("name", "punetteRadioList");
+			healthyRadioButton.setAttribute("onclick", "SelectCells('healthy',CreatePunnettSquare(ReturnVarList(document.getElementById('n').value * 1)),this.checked)");
+			form.appendChild(healthyRadioButton);
+			form.appendChild(document.createTextNode("Display cells where the individual is healthy"));
+			form.appendChild(document.createElement("br"));
+
+			var affectedRadioButton = document.createElement("input");
+			affectedRadioButton.id = "radio_button_affected";
+			affectedRadioButton.setAttribute("type", "radio");
+			affectedRadioButton.setAttribute("name", "punetteRadioList");
+			affectedRadioButton.setAttribute("onclick", "SelectCells('affected',CreatePunnettSquare(ReturnVarList(document.getElementById('n').value * 1)),this.checked)");
+			form.appendChild(affectedRadioButton);
+			form.appendChild(document.createTextNode("Display cells where the individual is affected by any disease"));
+			form.appendChild(document.createElement("br"));
+
+			for (var i = 0; i < variantList.length; i++) {
+				var tempRadioButton = document.createElement("input");
+				tempRadioButton.id = "radio_button_" + i;
+				tempRadioButton.setAttribute("type", "radio");
+				tempRadioButton.setAttribute("name", "punetteRadioList");
+				tempRadioButton.setAttribute("onclick", "SelectCells(" + (i + 1) + ",CreatePunnettSquare(ReturnVarList(document.getElementById('n').value * 1)),this.checked)");
+				form.appendChild(tempRadioButton);
+				form.appendChild(document.createTextNode("Display cells containing " + (i + 1) + " disease(s)"));
+				form.appendChild(document.createElement("br"));
+			}
+
+			var extraOptionsRadioButton = document.createElement("input");
+			extraOptionsRadioButton.id = "radio_button_extraOptions";
+			extraOptionsRadioButton.setAttribute("type", "radio");
+			extraOptionsRadioButton.setAttribute("name", "punetteRadioList");
+			extraOptionsRadioButton.setAttribute("onclick", "document.getElementById('extra_punnett_checkbox_options_form').hidden = false; ClearCells(CreatePunnettSquare(ReturnVarList(document.getElementById('n').value * 1)))");
+			form.appendChild(extraOptionsRadioButton);
+			form.appendChild(document.createTextNode("Display cells containing specific disease combinations"));
+			form.appendChild(document.createElement("br"));
+
+			var extraOptionsForm = document.getElementById('extra_punnett_checkbox_options_form');
+			for (var i = 0; i < variantList.length; i++) {
+				var tempVariantCheckbox = document.createElement("input");
+				tempVariantCheckbox.id = "variant_checkbox_" + i;
+				tempVariantCheckbox.setAttribute("type", "checkbox");
+				tempVariantCheckbox.setAttribute("name", "variantCheckbox");
+				tempVariantCheckbox.setAttribute("onclick", "SelectVariantCells(CreateVariantIndexList(ReturnVarList(document.getElementById('n').value * 1)), CreatePunnettSquare(ReturnVarList(document.getElementById('n').value * 1)),this.checked)");
+				extraOptionsForm.appendChild(tempVariantCheckbox);
+				extraOptionsForm.appendChild(document.createTextNode("Display cells where the individual is affected by " + variantList[i]));
+				extraOptionsForm.appendChild(document.createElement("br"));
+			}
+
+			form.hidden = false;
+		}
+
+		var variantIndexList = [];
+		function CreateVariantIndexList(variantList) {
+			for (var i = 0; i < variantList.length; i++) {
+				if (document.getElementById("variant_checkbox_" + i).checked) {
+					variantIndexList[i] = 1;
+				}
+				else {
+					variantIndexList[i] = 0;
+				}
+			}
+			return variantIndexList;
+		}
+
+		function CalculateSegregationPower() {
+			var text = "";
+			var tot = document.getElementById("total_number_of_relatives").value * 1;
+			var form = document.getElementById("segregation_power_options");
+			var i = 1;
+			var relation_list = [];
+			var aff_unafflist = [];
+			while (i <= tot) {
+				relation_list[i - 1] = document.getElementById("relation_" + i).value;
+				if (document.getElementById("aff_" + i).checked) {
+					aff_unafflist[i - 1] = 1;
+				}
+				else {
+					aff_unafflist[i - 1] = 0;
+				}
+				i++;
+			}
+
+			var seg_power_value = 1;
+			for (var j = 0; j < relation_list.length; j++) {
+				var k = relation_list[j];
+				if (aff_unafflist[j] == 0) {
+					seg_power_value *= (1 - k);
+				}
+				else {
+					seg_power_value *= k;
+				}
+			}
+			seg_power_value = Math.round(10000 * seg_power_value) / 10000;
+			text = "\n The segregation power of this variant is approximately: " + seg_power_value + " \n ";
+			if (seg_power_value <= 1 / 32) {
+				text += "This value is less than (1/32) \n This indicates strong evidence that this variant is pathogenic";
+			}
+			else if (seg_power_value <= 1 / 16) {
+				text += "This value is less than (1/16) \n This indicates moderate evidence that this variant is pathogenic";
+			}
+			else if (seg_power_value <= 1 / 8) {
+				text += "This value is less than (1/8) \n This indicates supporting evidence that this variant is pathogenic";
+			}
+			else {
+				text += "This value is too large to indicate any evidence that this disease is pathogenic";
+			}
+			document.getElementById("sp_result").innerText = text;
+		}
+		function CalculateRecurrenceRisk(validationInput) {
+			if (validationInput <= 0) {
+				alert("Please insert a valid number");
+				return;
+			}
+			var n = document.getElementById("n").value * 1;
+			var N = 0;
+			var text = "";
+			var prob_dec, prob_frac, prob_num, prob_denom;
+			for (N = 0; N <= (n + 1); N++) {
+				prob_dec, prob_frac, prob_num, prob_denom = 0;
+				if (N == 0) { //probability of being healthy
+					prob_num = Math.pow(3, n);
+					prob_denom = Math.pow(4, n);
+					prob_frac = prob_num + "/" + prob_denom;
+					prob_dec = Math.round(10000 * (prob_num / prob_denom)) / 100;
+					text += ("The probability of being healthy is: " + prob_dec + "% (" + prob_frac + ") <br>");
+					continue;
+				}
+				else if (N == (n + 1)) { //probability of being affected
+					prob_num = Math.pow(4, n) - Math.pow(3, n);
+					prob_denom = Math.pow(4, n);
+					prob_frac = prob_num + "/" + prob_denom;
+					prob_dec = Math.round(10000 * (prob_num / prob_denom)) / 100;
+					text += ("The probability of being affected by any disease is: " + prob_dec + "% (" + prob_frac + ")" + "<br>");
+					continue;
+				}
+				else { //probability of being affected by N diseases
+					prob_num = (Factorial(n) * Math.pow(3, (n - N)));
+					prob_denom = (Factorial(N) * Factorial(n - N) * Math.pow(4, N) * Math.pow(4, (n - N)));
+					prob_num = Simplify(prob_num, prob_denom);
+					prob_denom = Simplify(prob_denom, prob_denom);
+					prob_frac = prob_num + "/" + prob_denom;
+					prob_dec = Math.round(10000 * (prob_num / prob_denom)) / 100;
+					text += "The probability of being affected by " + N + " disease(s) is: " + prob_dec + "%  (" + prob_frac + ")" + "<br>";
+				}
+
+			}
+			document.getElementById("rr_result").innerHTML = text;
+			ShowPunnettOptions(n);
+		}
+
+		function CreatePunnettSquare(variantList) {
+			var binaryList = BinaryPermutations(variantList.length);
+			var punnettSquare = new Array(binaryList.length);
+			for (var i = 0; i < punnettSquare.length; i++) {
+				punnettSquare[i] = new Array(binaryList.length);
+			}
+			for (var i = 0; i < punnettSquare.length; i++) {
+				for (var j = 0; j < punnettSquare.length; j++) {
+					punnettSquare[i][j] = new Array(variantList.length);
+				}
+			}
+
+			for (var i = 0; i < punnettSquare.length; i++) {
+				for (var j = 0; j < punnettSquare.length; j++) {
+					for (var k = 0; k < variantList.length; k++) {
+						if (binaryList[i].charAt(k) == "1" && binaryList[j].charAt(k) == "1") {
+							punnettSquare[i][j][k] = variantList[k];
+						}
+						else {
+							punnettSquare[i][j][k] = " - ";
+						}
+					}
+				}
+			}
+			//document.getElementById("punnett_square_result").innerHTML = makeTableHTML(punnettSquare);
+			return punnettSquare;
+		}
+		function BinaryPermutations(n) {
+			var tempBinary = [];
+			for (var i = 0; i < Math.pow(2, n); i++) {
+				var tempString = "";
+				tempString += (i >>> 0).toString(2);
+				var zeroString = "";
+				for (var j = 0; j < (n - tempString.length); j++) {
+					zeroString += "0";
+				}
+				tempString = zeroString.concat(tempString);
+				tempBinary[i] = tempString;
+			}
+			return tempBinary;
+		}
+		function makeTableHTML(arr) {
+			document.getElementById("extra_punnett_options_probability").innerHTML = "";
+			document.getElementById("extra_punnett_checkbox_options_form").hidden = true;
+
+			var result = "<table border=1; style='text-align: center;'>";
+			tempArr = arr;
+			for (var i = 0; i < tempArr[0].length; i++) {
+				result += "<tr>";
+				for (var j = 0; j < tempArr[i].length; j++) {
+					var tempString = "";
+
+					var tempBool = true;
+					for (var k = 0; k < arr[i][j].length; k++) {
+						if (arr[i][j][k] != " - ") {
+							tempBool = false;
+						}
+					}
+
+
+					for (var k = 0; k < arr[i][j].length; k++) {
+						tempString += arr[i][j][k] + "<br>"
+					}
+					tempArr[i][j] = tempString;
+
+					if (tempBool) {
+						tempArr[i][j] = "Not affected by any diseases";
+					}
+
+					result += "<td style=width:600px;height:100px; id=" + i + "," + j + ">" + tempArr[i][j] + "</td>";
+				}
+				result += "</tr>";
+			}
+			result += "</table>";
+
+			return result;
+		}
+
+		function SelectCells(type, punnettSquare, check) {
+			document.getElementById("extra_punnett_options_probability").innerHTML = "";
+			document.getElementById("extra_punnett_checkbox_options_form").hidden = true;
+			UncheckExtraOptionsButtons();
+
+			ClearCells(punnettSquare);
+
+			if (type == "affected" || type == "healthy") {
+				for (var i = 0; i < punnettSquare.length; i++) {
+					for (var j = 0; j < punnettSquare[i].length; j++) {
+						var tempBool = true;
+						for (var k = 0; k < punnettSquare[i][j].length; k++) {
+							if (punnettSquare[i][j][k] != " - ") {
+								tempBool = false;
+							}
+						}
+
+						if (type == "affected") {
+							if (check && !tempBool) {
+								document.getElementById(i + "," + j).style.backgroundColor = "#cccccc";
+							}
+							else {
+								document.getElementById(i + "," + j).style.backgroundColor = "#ffffff";
+							}
+						}
+						else if (type == "healthy") {
+							if (check && tempBool) {
+								document.getElementById(i + "," + j).style.backgroundColor = "#cccccc";
+							}
+							else {
+								document.getElementById(i + "," + j).style.backgroundColor = "#ffffff";
+							}
+						}
+					}
+				}
+			}
+			else {
+				for (var i = 0; i < punnettSquare.length; i++) {
+					for (var j = 0; j < punnettSquare[i].length; j++) {
+						var count = 0;
+						for (var k = 0; k < punnettSquare[i][j].length; k++) {
+							if (punnettSquare[i][j][k] != " - ") {
+								count++;
+							}
+						}
+
+						if (type == count) {
+							if (check) {
+								document.getElementById(i + "," + j).style.backgroundColor = "#cccccc";
+							}
+							else {
+								document.getElementById(i + "," + j).style.backgroundColor = "#ffffff";
+							}
+						}
+					}
+				}
+			}
+		}
+
+		function SelectVariantCells(variantIndexList, punnettSquare) {
+			ClearCells(punnettSquare);
+			var check;
+			for (var k = 0; k < variantIndexList.length; k++) {
+				if (variantIndexList[k] == 1) {
+					check = true;
+				}
+				else {
+					check = false;
+				}
+				for (var i = 0; i < punnettSquare.length; i++) {
+					for (var j = 0; j < punnettSquare[i].length; j++) {
+						if (punnettSquare[i][j][k] != " - " && document.getElementById(i + "," + j).style.backgroundColor == "rgb(255, 255, 255)") {
+							if (check) {
+								document.getElementById(i + "," + j).style.backgroundColor = "#cccccc";
+							}
+							else {
+								document.getElementById(i + "," + j).style.backgroundColor = "#ffffff";
+							}
+						}
+					}
+				}
+			}
+			CountPunnettProbability(punnettSquare);
+		}
+
+		function CountPunnettProbability(punnettSquare) {
+			document.getElementById("extra_punnett_options_probability").innerHTML = "";
+			var count = 0;
+			var total = Math.pow(punnettSquare.length, 2);
+			for (var i = 0; i < punnettSquare.length; i++) {
+				for (var j = 0; j < punnettSquare[i].length; j++) {
+					if (document.getElementById(i + "," + j).style.backgroundColor != "rgb(255, 255, 255)") {
+						count++;
+					}
+				}
+			} 
+			var resultString = "Probability of individual being affected by this combination is: ";
+			var prob = Math.round(10000 * (count / total)) / 100;
+			resultString += prob + "% (" + count + "/" + total + ")";
+			document.getElementById("extra_punnett_options_probability").innerHTML = resultString;
+		}
+
+		function UncheckExtraOptionsButtons() {
+			var variantList = ReturnVarList(document.getElementById('n').value * 1);
+			for (var i = 0; i < variantList.length; i++) {
+				document.getElementById("variant_checkbox_" + i).checked = false;
+			}
+		}
+
+		function Factorial(x) {
+			result = 1;
+			while (x > 0) {
+				result *= x;
+				x--;
+			}
+			return result;
+		}
+		function Simplify(a, b) {
+			var tot = Math.pow(4, (document.getElementById("n").value * 1));
+			var factor = b / tot;
+			return a / factor;
+		}
+		function tempFunction(evt) {
+			if (evt.keyCode == 13) {
+				evt.preventDefault();
+				return true;
+			}
+		}
+		function ClearCells(punnettSquare) {
+			for (var i = 0; i < punnettSquare.length; i++) {
+				for (var j = 0; j < punnettSquare[i].length; j++) {
+					document.getElementById(i + "," + j).style.backgroundColor = "#ffffff";
+				}
+			}
+		}
+	</script>
+
+</body>
+
+</html>
+
+<!--
+- Clear selections when changing punnett square
+- make selections for: >unaffected
+					   >affected
+					   >affected by n
+-->
